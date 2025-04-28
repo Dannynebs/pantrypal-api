@@ -1,15 +1,13 @@
-# Use the official ASP.NET Core runtime as a base image
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS base
-WORKDIR /app
-
-# Use the .NET Core SDK image to build the app
+# Build stage
 FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
+COPY ["PantryPalAPI.csproj", "./"]
+RUN dotnet restore "./PantryPalAPI.csproj"
 COPY . .
-RUN dotnet publish -c Release -o /app
+RUN dotnet publish "./PantryPalAPI.csproj" -c Release -o /app/publish
 
-# Final stage/image
-FROM base AS final
+# Runtime stage
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS runtime
 WORKDIR /app
-COPY --from=build /app .
+COPY --from=build /app/publish .
 ENTRYPOINT ["dotnet", "PantryPalAPI.dll"]
